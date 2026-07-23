@@ -3,8 +3,8 @@ const { getTime } = global.utils;
 module.exports = {
   config: {
     name: "antileave",
-    version: "2.5",
-    author: "EryXenX",
+    version: "3.0",
+    author: "Hridoy",
     category: "events"
   },
 
@@ -14,7 +14,10 @@ module.exports = {
     const { threadID, logMessageData, author } = event;
     const leftID = logMessageData.leftParticipantFbId;
 
-    if (leftID === author) {
+    // Only re-add if the user left by themselves
+    if (leftID !== author) return;
+
+    try {
       const userName = await usersData.getName(leftID);
 
       const boldMap = {
@@ -26,19 +29,34 @@ module.exports = {
         u: "𝘂", v: "𝘃", w: "𝘄", x: "𝘅", y: "𝘆", z: "𝘇"
       };
 
-      const boldName = userName.split("").map(c => boldMap[c] || c).join("");
+      const boldName = userName
+        .split("")
+        .map(char => boldMap[char] || char)
+        .join("");
 
-      const form = {
-        body: `😹 ${boldName} tried to leave...  
+      await api.addUserToGroup(leftID, threadID);
 
-🚫 Not allowed here!  
-🔄 Added back 😇`
-      };
+      await message.send({
+        body: `
+        
+╭━━━〔 🚫 𝗔𝗡𝗧𝗜 • 𝗟𝗘𝗔𝗩𝗘 〕━━━╮
 
-      try {
-        await api.addUserToGroup(leftID, threadID);
-        await message.send(form);
-      } catch (err) {}
+😹 𝗢𝗼𝗽𝘀! ${boldName}
+
+🏃‍♂️ 𝗬𝗼𝘂 𝘁𝗿𝗶𝗲𝗱 𝘁𝗼 𝗹𝗲𝗮𝘃𝗲 𝘁𝗵𝗶𝘀 𝗴𝗿𝗼𝘂𝗽.
+🚫 𝗕𝘂𝘁 𝘁𝗵𝗮𝘁 𝗶𝘀𝗻'𝘁 𝗮𝗹𝗹𝗼𝘄𝗲𝗱!
+
+🔄 𝗬𝗼𝘂 𝗵𝗮𝘃𝗲 𝗯𝗲𝗲𝗻 𝗮𝗱𝗱𝗲𝗱 𝗯𝗮𝗰𝗸.
+💖 𝗢𝗻𝗰𝗲 𝘆𝗼𝘂 𝗷𝗼𝗶𝗻, 𝘆𝗼𝘂'𝗿𝗲 𝗮 𝗽𝗮𝗿𝘁 𝗼𝗳 𝘁𝗵𝗶𝘀 𝗳𝗮𝗺𝗶𝗹𝘆.
+
+⏰ 𝗧𝗶𝗺𝗲: ${getTime("HH:mm:ss")}
+✨ 𝗛𝗮𝘃𝗲 𝗮 𝗻𝗶𝗰𝗲 𝗱𝗮𝘆!
+
+╰━━━━━━━━━━━━━━━━━━━━╯`
+      });
+
+    } catch (err) {
+      console.error("AntiLeave Error:", err);
     }
   }
 };
